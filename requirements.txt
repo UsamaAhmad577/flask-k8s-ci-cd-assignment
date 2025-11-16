@@ -1,2 +1,4 @@
 # requirements.txt
 Flask==2.3.2
+pytest==7.4.3
+flake8==6.1.0

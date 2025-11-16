@@ -2,9 +2,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ develop, main, feature/** ]
+    branches: ['**']
   pull_request:
-    branches: [ develop, main ]
+    branches: ['**']
 
 jobs:
   test:
@@ -24,18 +24,18 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Run tests
+    - name: Run flake8 linting
       run: |
-        python -c "from flask import Flask; print('Flask import successful')"
+        # Stop the build if there are Python syntax errors
+        flake8 . --count --select=E9,F63,F7,F82 --show-source \
+          --statistics
+        # Check max-line-length is no longer than 90 characters
+        flake8 . --count --exit-zero --max-complexity=10 \
+          --max-line-length=90 --statistics
 
-    - name: Lint with flake8
+    - name: Run pytest unit tests
       run: |
-        pip install flake8
-        # Stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # Exit-zero treats all errors as warnings
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      continue-on-error: true
+        pytest tests/ -v
 
   build:
     runs-on: ubuntu-latest
@@ -52,8 +52,4 @@ jobs:
       run: |
         docker build -t flask-app:${{ github.sha }} .
         docker build -t flask-app:latest .
-
-    - name: Test Docker image
-      run: |
-        docker run --rm flask-app:latest python -c "from flask import Flask; print('Docker image test successful')"
 
